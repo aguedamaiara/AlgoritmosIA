@@ -22,14 +22,17 @@ def gerar_sucessores(estado):
                 sucessores.append(novo_estado)
     return sucessores
 
-# Busca gulosa com rastreamento de conflitos
+# Busca gulosa com histórico de estados visitados e backtracking
 def busca_gulosa(estado_inicial):
     estado_atual = estado_inicial
-    caminho = [estado_atual]
+    caminho = [estado_atual] # Pilha para armazenar o caminho percorrido
+    visitados = set() # Conjunto para armazenar estados visitados
+    visitados.add(tuple(estado_atual))  # Adiciona o estado inicial aos visitados
 
     print(f"Estado inicial: {estado_atual} | Conflitos: {calcular_conflitos(estado_atual)}")
 
-    while True:
+    while caminho:
+        estado_atual = caminho[-1]  # Pega o último estado da pilha
         conflitos_atual = calcular_conflitos(estado_atual)
 
         # Se não houver conflitos, solução encontrada
@@ -44,21 +47,26 @@ def busca_gulosa(estado_inicial):
         # Avaliar sucessores
         for sucessor in sucessores:
             conflitos = calcular_conflitos(sucessor)
-            if conflitos < menor_conflitos:
+            if conflitos < menor_conflitos and tuple(sucessor) not in visitados:
                 menor_conflitos = conflitos
                 melhor_estado = sucessor
 
         print(f"Estado atual: {estado_atual} | Conflitos: {conflitos_atual}")
         print(f"Melhor sucessor: {melhor_estado} | Conflitos: {menor_conflitos}")
 
-        # Se não houver melhora, retornar o caminho
-        if menor_conflitos >= conflitos_atual:
-            print("Nenhuma melhoria possível. Parando a busca.")
-            return caminho
+        # Se não houver melhora, faz backtracking
+        if melhor_estado is None:
+            print("Nenhum sucessor válido. Fazendo backtracking.")
+            caminho.pop()  # Remove o estado atual da pilha
+            continue
 
-        # Atualizar o estado atual
+        # Atualizar o estado atual e adicionar ao histórico de visitados
         estado_atual = melhor_estado
+        visitados.add(tuple(estado_atual))
         caminho.append(estado_atual)
+
+    print("Nenhuma solução encontrada.")
+    return None
 
 # Caso 1: Estado inicial já é solução
 def caso_1():
@@ -89,12 +97,14 @@ def caso_3():
 
 # Exibir resultado final
 def exibir_resultado(caminho, tempo_execucao):
-    print("\nCaminho para a solução:")
-    for passo, estado in enumerate(caminho):
-        print(f"Passo {passo}: {estado} | Conflitos: {calcular_conflitos(estado)}")
-    print(f"Tempo de processamento: {tempo_execucao:.6f} segundos")
-    print(f"Total de passos: {len(caminho)}\n")
-
+    if caminho:
+        print("\nCaminho para a solução:")
+        for passo, estado in enumerate(caminho):
+            print(f"Passo {passo}: {estado} | Conflitos: {calcular_conflitos(estado)}")
+        print(f"Tempo de processamento: {tempo_execucao:.6f} segundos")
+        print(f"Total de passos: {len(caminho)}\n")
+    else:
+        print("Nenhuma solução foi encontrada.")
 
 # Executar os casos
 def main():
